@@ -2,8 +2,10 @@ package main
 
 import (
 	"flag"
-	"log"
+	"fmt"
+	"log/slog"
 	"net/http"
+	"os"
 	"path/filepath"
 )
 
@@ -20,6 +22,8 @@ func main() {
 	flag.StringVar(&cfg.staticDir, "static-dir", "./ui/static", "Path to static assets")
 	flag.Parse()
 
+	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+
 	mux := http.NewServeMux()
 
 	fileServer := http.FileServer(neuteredFileSystem{http.Dir(cfg.staticDir)})
@@ -31,11 +35,12 @@ func main() {
 	mux.HandleFunc("GET /snippet/create", snippetCreate)
 	mux.HandleFunc("POST /snippet/create", snippetCreatePost)
 
-	log.Printf("Starting server on http://localhost%s", cfg.addr)
+	logger.Info("Starting server on", "addr", fmt.Sprintf("http://localhost%s", cfg.addr))
 
 	err := http.ListenAndServe(cfg.addr, mux)
 
-	log.Fatal(err)
+	logger.Error(err.Error())
+	os.Exit(1)
 }
 
 type neuteredFileSystem struct {
