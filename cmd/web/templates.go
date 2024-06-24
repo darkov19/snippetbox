@@ -3,9 +3,22 @@ package main
 import (
 	"html/template"
 	"path/filepath"
+	"time"
 
 	"github.com/darkov19/snippetbox/internal/models"
 )
+
+type templateData struct {
+	CurrentYear int
+	Snippet     models.Snippet
+	Snippets    []models.Snippet
+}
+
+func newTemplateData() templateData {
+	return templateData{
+		CurrentYear: time.Now().Year(),
+	}
+}
 
 func newTemplateCache() (map[string]*template.Template, error) {
 	cache := map[string]*template.Template{}
@@ -37,9 +50,4 @@ func newTemplateCache() (map[string]*template.Template, error) {
 	}
 
 	return cache, nil
-}
-
-type templateData struct {
-	Snippet  models.Snippet
-	Snippets []models.Snippet
 }
