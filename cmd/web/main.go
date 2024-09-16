@@ -1,10 +1,16 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"net/http"
 	"path/filepath"
 )
+
+type config struct {
+	addr      string
+	staticDir string
+}
 
 type customFileSystem struct {
 	fs http.FileSystem
@@ -39,6 +45,13 @@ func (cfs customFileSystem) Open(path string) (http.File, error) {
 func main() {
 	mux := http.NewServeMux()
 
+	var cfg config
+
+	flag.StringVar(&cfg.addr, "addr", ":4000", "HTTP Network Address")
+	flag.StringVar(&cfg.staticDir, "static-dir", "./ui/static", "Path to static assets")
+
+	flag.Parse()
+
 	filerServer := http.FileServer(customFileSystem{http.Dir("./ui/static/")})
 
 	mux.Handle("GET /static/", http.StripPrefix("/static", filerServer))
@@ -50,6 +63,6 @@ func main() {
 
 	log.Print("starting server on :4000")
 
-	err := http.ListenAndServe(":4000", mux)
+	err := http.ListenAndServe(cfg.addr, mux)
 	log.Fatal(err)
 }
