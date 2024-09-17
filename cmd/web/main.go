@@ -2,8 +2,9 @@ package main
 
 import (
 	"flag"
-	"log"
+	"log/slog"
 	"net/http"
+	"os"
 	"path/filepath"
 )
 
@@ -18,17 +19,20 @@ type customFileSystem struct {
 
 func (cfs customFileSystem) Open(path string) (http.File, error) {
 	f, err := cfs.fs.Open(path)
+
 	if err != nil {
 		return nil, err
 	}
 
 	s, err := f.Stat()
+
 	if err != nil {
 		return nil, err
 	}
 
 	if s.IsDir() {
 		index := filepath.Join(path, "index.html")
+
 		if _, err := cfs.fs.Open(index); err != nil {
 			closeErr := f.Close()
 			if closeErr != nil {
@@ -49,8 +53,11 @@ func main() {
 
 	flag.StringVar(&cfg.addr, "addr", ":4000", "HTTP Network Address")
 	flag.StringVar(&cfg.staticDir, "static-dir", "./ui/static", "Path to static assets")
-
 	flag.Parse()
+
+	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		AddSource: true,
+	}))
 
 	filerServer := http.FileServer(customFileSystem{http.Dir("./ui/static/")})
 
@@ -61,8 +68,10 @@ func main() {
 	mux.HandleFunc("GET /snippet/create", snippetCreate)
 	mux.HandleFunc("POST /snippet/create", snippetCreatePost)
 
-	log.Print("starting server on :4000")
+	logger.Info("starting server", "addr", cfg.addr)
 
 	err := http.ListenAndServe(cfg.addr, mux)
-	log.Fatal(err)
+
+	logger.Error(err.Error())
+	os.Exit(1)
 }
