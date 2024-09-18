@@ -13,6 +13,10 @@ type config struct {
 	staticDir string
 }
 
+type application struct {
+	logger *slog.Logger
+}
+
 type customFileSystem struct {
 	fs http.FileSystem
 }
@@ -59,19 +63,23 @@ func main() {
 		AddSource: true,
 	}))
 
+	app := &application{
+		logger: logger,
+	}
+
 	filerServer := http.FileServer(customFileSystem{http.Dir("./ui/static/")})
 
 	mux.Handle("GET /static/", http.StripPrefix("/static", filerServer))
 
-	mux.HandleFunc("GET /{$}", home)
-	mux.HandleFunc("GET /snippet/view/{id}", snippetView)
-	mux.HandleFunc("GET /snippet/create", snippetCreate)
-	mux.HandleFunc("POST /snippet/create", snippetCreatePost)
+	mux.HandleFunc("GET /{$}", app.home)
+	mux.HandleFunc("GET /snippet/view/{id}", app.snippetView)
+	mux.HandleFunc("GET /snippet/create", app.snippetCreate)
+	mux.HandleFunc("POST /snippet/create", app.snippetCreatePost)
 
 	logger.Info("starting server", "addr", cfg.addr)
 
 	err := http.ListenAndServe(cfg.addr, mux)
 
-	logger.Error(err.Error())
+	app.logger.Error(err.Error())
 	os.Exit(1)
 }
