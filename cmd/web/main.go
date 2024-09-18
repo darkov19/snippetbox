@@ -51,8 +51,6 @@ func (cfs customFileSystem) Open(path string) (http.File, error) {
 }
 
 func main() {
-	mux := http.NewServeMux()
-
 	var cfg config
 
 	flag.StringVar(&cfg.addr, "addr", ":4000", "HTTP Network Address")
@@ -67,18 +65,9 @@ func main() {
 		logger: logger,
 	}
 
-	filerServer := http.FileServer(customFileSystem{http.Dir("./ui/static/")})
-
-	mux.Handle("GET /static/", http.StripPrefix("/static", filerServer))
-
-	mux.HandleFunc("GET /{$}", app.home)
-	mux.HandleFunc("GET /snippet/view/{id}", app.snippetView)
-	mux.HandleFunc("GET /snippet/create", app.snippetCreate)
-	mux.HandleFunc("POST /snippet/create", app.snippetCreatePost)
-
 	logger.Info("starting server", "addr", cfg.addr)
 
-	err := http.ListenAndServe(cfg.addr, mux)
+	err := http.ListenAndServe(cfg.addr, app.routes())
 
 	app.logger.Error(err.Error())
 	os.Exit(1)
