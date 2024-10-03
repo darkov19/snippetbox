@@ -104,10 +104,14 @@ func main() {
 		sessionManager: sessionManager,
 	}
 
-	logger.Info("starting server", "addr", cfg.addr)
+	srv := &http.Server{
+		Addr:    cfg.addr,
+		Handler: app.routes(),
+	}
 
-	err = http.ListenAndServe(cfg.addr, app.routes())
+	logger.Info("starting server", "addr", srv.Addr)
 
+	err = srv.ListenAndServe()
 	app.logger.Error(err.Error())
 	os.Exit(1)
 }
