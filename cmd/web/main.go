@@ -73,9 +73,7 @@ func main() {
 	flag.StringVar(&cfg.dsn, "dsn", "web:1920@tcp(localhost:33061)/snippetbox?parseTime=true", "MySQL data source name")
 	flag.Parse()
 
-	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
-		AddSource: true,
-	}))
+	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 
 	db, err := openDB(cfg.dsn)
 	if err != nil {
@@ -105,8 +103,9 @@ func main() {
 	}
 
 	srv := &http.Server{
-		Addr:    cfg.addr,
-		Handler: app.routes(),
+		Addr:     cfg.addr,
+		Handler:  app.routes(),
+		ErrorLog: slog.NewLogLogger(logger.Handler(), slog.LevelError),
 	}
 
 	logger.Info("starting server", "addr", srv.Addr)
