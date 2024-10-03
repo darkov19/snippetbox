@@ -64,7 +64,6 @@ func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request) {
-
 	var form snippetCreateForm
 
 	err := app.decodePostForm(r, &form)
